@@ -9,7 +9,7 @@
 
 A clean, fast, and good-looking speedcubing dashboard built for practice.
 
-**Live demo:** *(add your GitHub Pages / Netlify link here)*
+**Live demo:** *https://speedcubing-tools.netlify.app*
 
 ---
 
