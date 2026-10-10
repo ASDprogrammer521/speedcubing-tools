@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedcubing Tools — ASDcuber521</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --bg: #06040e;
+            --card: rgba(16, 10, 28, 0.75);
+            --border: rgba(168, 85, 247, 0.22);
+            --primary: #a855f7;
+            --glow: #c084fc;
+            --cyan: #22d3ee;
+            --blue: #3b82f6;
+            --green: #22c55e;
+            --red: #ef4444;
+            --orange: #f97316;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 5%;
+            background: rgba(6, 4, 14, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.25rem;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo i { color: var(--primary); text-shadow: 0 0 12px var(--primary); }
+        .logo span { color: var(--primary); }
+
+        .nav-tabs {
+            display: flex;
+            gap: 6px;
+            background: rgba(255,255,255,0.04);
+            padding: 5px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+        }
+        .nav-tab {
+            padding: 8px 18px;
+            border-radius: 10px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: inherit;
+        }
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--primary), #7e22ce);
+            color: #fff;
+            box-shadow: 0 0 18px rgba(168, 85, 247, 0.4);
+        }
+        .nav-tab:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.06); }
+
+        /* Main layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 28px 5% 60px;
+        }
+
+        .section { display: none; animation: fadeIn 0.4s ease; }
+        .section.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Puzzle selector */
+        .puzzle-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+        .puzzle-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: 'Fira Code', monospace;
+        }
+        .puzzle-btn.active {
+            background: rgba(168, 85, 247, 0.2);
+            border-color: var(--primary);
+            color: var(--glow);
+            box-shadow: 0 0 14px rgba(168, 85, 247, 0.25);
+        }
+        .puzzle-btn:hover:not(.active) {
+            border-color: rgba(168, 85, 247, 0.4);
+            color: #fff;
+        }
+
+        /* ===== TIMER SECTION ===== */
+        .timer-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 36px 28px;
+            text-align: center;
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+        .timer-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), var(--cyan), transparent);
+        }
+
+        .scramble-box {
+            font-family: 'Fira Code', monospace;
+            font-size: clamp(1rem, 2.5vw, 1.35rem);
+            color: var(--cyan);
+            letter-spacing: 1px;
+            line-height: 1.7;
+            min-height: 60px;
+            margin-bottom: 28px;
+            padding: 16px 20px;
+            background: rgba(0,0,0,0.35);
+            border-radius: 12px;
+            border: 1px solid rgba(34, 211, 238, 0.15);
+            word-break: break-word;
+            user-select: all;
+        }
+
+        .timer-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(3.5rem, 12vw, 6.5rem);
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(168, 85, 247, 0.35);
+            margin: 10px 0 8px;
+            letter-spacing: 2px;
+            transition: color 0.2s;
+        }
+        .timer-display.ready { color: var(--green); text-shadow: 0 0 40px rgba(34, 197, 94, 0.45); }
+        .timer-display.running { color: var(--cyan); text-shadow: 0 0 40px rgba(34, 211, 238, 0.4); }
+        .timer-display.inspection { color: var(--orange); text-shadow: 0 0 40px rgba(249, 115, 22, 0.4); }
+
+        .timer-hint {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+        }
+        .timer-hint kbd {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+        }
+
+        .timer-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+        .btn {
+            padding: 11px 22px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn:hover {
+            background: rgba(168, 85, 247, 0.15);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #7e22ce);
+            border: none;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 28px rgba(168, 85, 247, 0.55);
+            transform: translateY(-2px);
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .stat-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 10px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--glow);
+        }
+
+        /* Times list */
+        .times-panel {
+            margin-top: 24px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+        .times-panel h3 {
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            color: var(--muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .time-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .time-item:hover { background: rgba(168, 85, 247, 0.08); }
+        .time-item .num { color: var(--muted); width: 32px; }
+        .time-item .val { color: var(--cyan); font-weight: 600; }
+        .time-item .del {
+            color: var(--muted);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            border: none;
+            background: none;
+            font-size: 0.85rem;
+        }
+        .time-item:hover .del { opacity: 1; color: var(--red); }
+
+        /* ===== TRAINER SECTION ===== */
+        .trainer-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 800px) {
+            .trainer-layout { grid-template-columns: 1fr; }
+        }
+
+        .alg-sidebar {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            height: fit-content;
+            position: sticky;
+            top: 80px;
+        }
+        .alg-sidebar h3 {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .alg-cat-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .alg-cat-btn.active {
+            background: rgba(168, 85, 247, 0.15);
+            border-color: var(--border);
+            color: var(--glow);
+        }
+        .alg-cat-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+        }
+
+        .alg-main {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            min-height: 420px;
+        }
+
+        .alg-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 14px;
+        }
+
+        .alg-card {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .alg-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(168, 85, 247, 0.15);
+        }
+        .alg-card.selected {
+            border-color: var(--cyan);
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+        }
+        .alg-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+        .alg-moves {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.78rem;
+            color: var(--cyan);
+            line-height: 1.5;
+            word-break: break-all;
+        }
+        .alg-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--glow);
+            font-weight: 600;
+        }
+
+        /* Trainer practice mode */
+        .practice-box {
+            display: none;
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .practice-box.active { display: block; }
+        .practice-case {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--glow);
+            margin-bottom: 12px;
+            text-shadow: 0 0 24px rgba(168, 85, 247, 0.4);
+        }
+        .practice-alg {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.3rem;
+            color: var(--cyan);
+            background: rgba(0,0,0,0.4);
+            padding: 18px 24px;
+            border-radius: 12px;
+            margin: 20px auto;
+            max-width: 520px;
+            border: 1px solid rgba(34, 211, 238, 0.2);
+            letter-spacing: 1px;
+        }
+        .practice-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+
+        /* ===== DASHBOARD ===== */
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+        .dash-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            transition: all 0.35s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .dash-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--cyan));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .dash-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(168, 85, 247, 0.45);
+            box-shadow: 0 16px 36px rgba(168, 85, 247, 0.12);
+        }
+        .dash-card:hover::after { opacity: 1; }
+        .dash-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+        .dash-card h3 {
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+        }
+        .dash-card p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+
+        .welcome {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+        .welcome h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+        .welcome h1 span {
+            background: linear-gradient(90deg, var(--primary), var(--cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .welcome p { color: var(--muted); font-size: 1.05rem; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+        footer a { color: var(--primary); text-decoration: none; }
+
+        /* Hide times when empty */
+        .empty-times {
+            color: var(--muted);
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <header>
+        <a href="#" class="logo" onclick="showSection('dashboard'); return false;">
+            <i class="fa-solid fa-cube"></i> Cube<span>Tools</span>
+        </a>
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-section="dashboard" onclick="showSection('dashboard')">Dashboard</button>
+            <button class="nav-tab" data-section="timer" onclick="showSection('timer')">Timer</button>
+            <button class="nav-tab" data-section="trainer" onclick="showSection('trainer')">Alg Trainer</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- ========== DASHBOARD ========== -->
+        <div class="section active" id="section-dashboard">
+            <div class="welcome">
+                <h1>Speedcubing <span>Tools</span></h1>
+                <p>Timer · CFOP Algorithm Trainer · 2×2 to 7×7</p>
+            </div>
+            <div class="dash-grid">
+                <div class="dash-card" onclick="showSection('timer')">
+                    <div class="dash-icon"><i class="fa-solid fa-stopwatch"></i></div>
+                    <h3>Smart Timer</h3>
+                    <p>Spacebar timer with inspection, scramble generator for 2×2–7×7, ao5 / ao12 stats and session history.</p>
+                </div>
+                <div class="dash-card" onclick="showSection('trainer')">
+                    <div class="dash-icon"><i class="fa-solid fa-brain"></i></div>
+                    <h3>CFOP Alg Trainer</h3>
+                    <p>OLL & PLL algorithms with practice mode. Learn cases, hide/show algs, and drill until muscle memory kicks in.</p>
+                </div>
+                <div class="dash-card" onclick="showSection('timer')">
+                    <div class="dash-icon"><i class="fa-solid fa-cubes"></i></div>
+                    <h3>Multi-Puzzle</h3>
+                    <p>Full support from 2×2 Pocket Cube up to 7×7. Fresh scramble every solve.</p>
+                </div>
+                <div class="dash-card" onclick="showSection('trainer')">
+                    <div class="dash-icon"><i class="fa-solid fa-bolt"></i></div>
+                    <h3>Practice Mode</h3>
+                    <p>Random case trainer for OLL and PLL. Hide the algorithm and reconstruct from memory.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== TIMER ========== -->
+        <div class="section" id="section-timer">
+            <div class="puzzle-bar" id="puzzle-bar">
+                <button class="puzzle-btn" data-size="2">2×2</button>
+                <button class="puzzle-btn active" data-size="3">3×3</button>
+                <button class="puzzle-btn" data-size="4">4×4</button>
+                <button class="puzzle-btn" data-size="5">5×5</button>
+                <button class="puzzle-btn" data-size="6">6×6</button>
+                <button class="puzzle-btn" data-size="7">7×7</button>
+            </div>
+
+            <div class="timer-card">
+                <div class="scramble-box" id="scramble">Loading scramble…</div>
+                <div class="timer-display" id="timer">0.00</div>
+                <div class="timer-hint">Hold <kbd>Space</kbd> to ready · Release to start · Press again to stop</div>
+
+                <div class="timer-actions">
+                    <button class="btn btn-primary" onclick="newScramble()"><i class="fa-solid fa-shuffle"></i> New Scramble</button>
+                    <button class="btn" onclick="toggleInspection()"><i class="fa-solid fa-eye"></i> <span id="insp-label">Inspection: ON</span></button>
+                    <button class="btn" onclick="clearSession()"><i class="fa-solid fa-trash"></i> Clear Session</button>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">Solves</div>
+                        <div class="stat-value" id="stat-count">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Best</div>
+                        <div class="stat-value" id="stat-best">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Worst</div>
+                        <div class="stat-value" id="stat-worst">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">ao5</div>
+                        <div class="stat-value" id="stat-ao5">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">ao12</div>
+                        <div class="stat-value" id="stat-ao12">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Mean</div>
+                        <div class="stat-value" id="stat-mean">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="times-panel">
+                <h3>
+                    <span>Session Times</span>
+                    <span style="font-size:0.8rem;color:var(--muted)" id="session-label">3×3</span>
+                </h3>
+                <div id="times-list">
+                    <div class="empty-times">No solves yet. Press Space to start!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== TRAINER ========== -->
+        <div class="section" id="section-trainer">
+            <div class="trainer-layout">
+                <div class="alg-sidebar">
+                    <h3>Categories</h3>
+                    <button class="alg-cat-btn active" data-cat="oll" onclick="loadCategory('oll')">OLL (57)</button>
+                    <button class="alg-cat-btn" data-cat="pll" onclick="loadCategory('pll')">PLL (21)</button>
+                    <button class="alg-cat-btn" data-cat="f2l" onclick="loadCategory('f2l')">F2L Basics</button>
+                    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+                    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="startPractice()">
+                        <i class="fa-solid fa-bolt"></i> Practice Mode
+                    </button>
+                </div>
+
+                <div class="alg-main">
+                    <div id="alg-list-view">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+                            <h2 id="cat-title" style="font-size:1.3rem;">OLL Algorithms</h2>
+                            <span style="color:var(--muted);font-size:0.85rem;" id="cat-count">57 cases</span>
+                        </div>
+                        <div class="alg-grid" id="alg-grid"></div>
+                    </div>
+
+                    <div class="practice-box" id="practice-box">
+                        <div class="practice-case" id="practice-name">OLL 01</div>
+                        <div style="color:var(--muted);margin-bottom:8px;">Memorize the algorithm, then reconstruct</div>
+                        <div class="practice-alg" id="practice-alg">R U2 R' U' R U' R'</div>
+                        <div class="practice-controls">
+                            <button class="btn" onclick="toggleAlgVisibility()"><i class="fa-solid fa-eye"></i> <span id="vis-label">Hide Alg</span></button>
+                            <button class="btn btn-primary" onclick="nextPracticeCase()"><i class="fa-solid fa-forward"></i> Next Case</button>
+                            <button class="btn" onclick="exitPractice()"><i class="fa-solid fa-xmark"></i> Exit</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        Built by <a href="https://github.com/ASDprogrammer521" target="_blank">ASDcuber521</a> · Speedcubing Tools
+    </footer>
+
+    <script>
+        // ========== BACKGROUND ==========
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < 90; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    r: Math.random() * 1.4 + 0.3,
+                    a: Math.random(),
+                    s: Math.random() * 0.015 + 0.004,
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: Math.random() * 0.4 + 0.1
+                });
+            }
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        function drawBg() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const p of particles) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(168, 85, 247, ${p.a})`;
+                ctx.fill();
+                p.a += p.s;
+                if (p.a > 1 || p.a < 0.1) p.s = -p.s;
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.y > canvas.height) { p.y = 0; p.x = Math.random() * canvas.width; }
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+            }
+            requestAnimationFrame(drawBg);
+        }
+        drawBg();
+
+        // ========== NAVIGATION ==========
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('section-' + id).classList.add('active');
+            document.querySelectorAll('.nav-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.section === id);
+            });
+        }
+
+        // ========== SCRAMBLE GENERATORS ==========
+        const MOVES_3 = ["R","R'","R2","L","L'","L2","U","U'","U2","D","D'","D2","F","F'","F2","B","B'","B2"];
+        const FACES = { R:0, L:0, U:1, D:1, F:2, B:2 };
+
+        function scrambleNxN(n, len) {
+            // Simple wide-move aware scramble for n>3
+            const faces = ['R','L','U','D','F','B'];
+            const suffixes = n >= 4
+                ? ["", "'", "2", "w", "w'", "w2"]
+                : ["", "'", "2"];
+            let moves = [];
+            let lastFace = -1;
+            let lastAxis = -1;
+            for (let i = 0; i < len; i++) {
+                let face, axis, suf;
+                do {
+                    face = faces[Math.floor(Math.random() * 6)];
+                    axis = FACES[face];
+                } while (axis === lastAxis);
+                // Prefer outer moves, sometimes wide for bigger cubes
+                if (n >= 4 && Math.random() < 0.35) {
+                    suf = ["w", "w'", "w2"][Math.floor(Math.random() * 3)];
+                } else {
+                    suf = ["", "'", "2"][Math.floor(Math.random() * 3)];
+                }
+                // 5x5+ can have 3w style but keep simple
+                moves.push(face + suf);
+                lastFace = face;
+                lastAxis = axis;
+            }
+            return moves.join(' ');
+        }
+
+        function scramble3x3(len = 20) {
+            const moves = [];
+            let lastAxis = -1;
+            for (let i = 0; i < len; i++) {
+                let m, axis;
+                do {
+                    m = MOVES_3[Math.floor(Math.random() * MOVES_3.length)];
+                    axis = FACES[m[0]];
+                } while (axis === lastAxis);
+                moves.push(m);
+                lastAxis = axis;
+            }
+            return moves.join(' ');
+        }
+
+        function scramble2x2(len = 10) {
+            const moves2 = ["R","R'","R2","U","U'","U2","F","F'","F2"];
+            const moves = [];
+            let last = '';
+            for (let i = 0; i < len; i++) {
+                let m;
+                do { m = moves2[Math.floor(Math.random() * moves2.length)]; }
+                while (m[0] === last);
+                moves.push(m);
+                last = m[0];
+            }
+            return moves.join(' ');
+        }
+
+        const SCRAMBLE_LEN = { 2: 10, 3: 20, 4: 40, 5: 60, 6: 80, 7: 100 };
+
+        function generateScramble(size) {
+            if (size === 2) return scramble2x2();
+            if (size === 3) return scramble3x3();
+            return scrambleNxN(size, SCRAMBLE_LEN[size] || 40);
+        }
+
+        // ========== TIMER LOGIC ==========
+        let currentSize = 3;
+        let times = []; // in ms
+        let startTime = 0;
+        let timerInterval = null;
+        let state = 'idle'; // idle | holding | ready | running | inspection
+        let inspectionOn = true;
+        let inspStart = 0;
+        let holdStart = 0;
+
+        const timerEl = document.getElementById('timer');
+        const scrambleEl = document.getElementById('scramble');
+
+        function formatTime(ms) {
+            if (ms < 0) return '0.00';
+            const totalSec = ms / 1000;
+            if (totalSec < 60) return totalSec.toFixed(2);
+            const m = Math.floor(totalSec / 60);
+            const s = (totalSec % 60).toFixed(2);
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        function newScramble() {
+            scrambleEl.textContent = generateScramble(currentSize);
+        }
+
+        function updateStats() {
+            const n = times.length;
+            document.getElementById('stat-count').textContent = n;
+            if (n === 0) {
+                ['best','worst','ao5','ao12','mean'].forEach(k => {
+                    document.getElementById('stat-' + k).textContent = '—';
+                });
+                return;
+            }
+            const sorted = [...times].sort((a,b) => a-b);
+            document.getElementById('stat-best').textContent = formatTime(sorted[0]);
+            document.getElementById('stat-worst').textContent = formatTime(sorted[sorted.length-1]);
+            const mean = times.reduce((a,b)=>a+b,0) / n;
+            document.getElementById('stat-mean').textContent = formatTime(mean);
+
+            function ao(count) {
+                if (n < count) return '—';
+                const slice = times.slice(-count);
+                const s = [...slice].sort((a,b)=>a-b);
+                const trimmed = s.slice(1, -1); // remove best & worst
+                const avg = trimmed.reduce((a,b)=>a+b,0) / trimmed.length;
+                return formatTime(avg);
+            }
+            document.getElementById('stat-ao5').textContent = ao(5);
+            document.getElementById('stat-ao12').textContent = ao(12);
+
+            // times list
+            const list = document.getElementById('times-list');
+            if (n === 0) {
+                list.innerHTML = '<div class="empty-times">No solves yet. Press Space to start!</div>';
+                return;
+            }
+            list.innerHTML = times.map((t, i) => `
+                <div class="time-item">
+                    <span class="num">${i+1}.</span>
+                    <span class="val">${formatTime(t)}</span>
+                    <button class="del" onclick="deleteTime(${i})" title="Delete"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            `).reverse().join('');
+        }
+
+        function deleteTime(i) {
+            times.splice(i, 1);
+            updateStats();
+        }
+
+        function clearSession() {
+            if (times.length && !confirm('Clear all times in this session?')) return;
+            times = [];
+            updateStats();
+            timerEl.textContent = '0.00';
+            timerEl.className = 'timer-display';
+            state = 'idle';
+        }
+
+        function toggleInspection() {
+            inspectionOn = !inspectionOn;
+            document.getElementById('insp-label').textContent = 'Inspection: ' + (inspectionOn ? 'ON' : 'OFF');
+        }
+
+        // Spacebar handling
+        let spaceDown = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code !== 'Space') return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            e.preventDefault();
+            if (spaceDown) return;
+            spaceDown = true;
+
+            if (state === 'running') {
+                // stop
+                const elapsed = performance.now() - startTime;
+                clearInterval(timerInterval);
+                timerEl.textContent = formatTime(elapsed);
+                timerEl.className = 'timer-display';
+                times.push(elapsed);
+                updateStats();
+                state = 'idle';
+                newScramble();
+                return;
+            }
+
+            if (state === 'idle' || state === 'inspection') {
+                holdStart = performance.now();
+                state = 'holding';
+                timerEl.className = 'timer-display';
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code !== 'Space') return;
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            e.preventDefault();
+            spaceDown = false;
+
+            if (state === 'holding') {
+                const held = performance.now() - holdStart;
+                if (held >= 300) {
+                    // ready → start
+                    if (inspectionOn && state !== 'from-insp') {
+                        // start inspection
+                        state = 'inspection';
+                        inspStart = performance.now();
+                        timerEl.className = 'timer-display inspection';
+                        timerInterval = setInterval(() => {
+                            const sec = Math.floor((performance.now() - inspStart) / 1000);
+                            timerEl.textContent = (15 - sec);
+                            if (sec >= 15) {
+                                // auto start after inspection overtime (simplified)
+                                clearInterval(timerInterval);
+                                beginSolve();
+                            }
+                        }, 50);
+                    } else {
+                        beginSolve();
+                    }
+                } else {
+                    state = 'idle';
+                    timerEl.className = 'timer-display';
+                }
+            }
+        });
+
+        // During inspection, another space press starts the solve
+        document.addEventListener('keydown', (e) => {
+            if (e.code !== 'Space') return;
+            if (state === 'inspection' && spaceDown) {
+                // will be handled on keyup after short hold, but also allow instant start
+            }
+        });
+
+        // Better inspection → solve transition
+        document.addEventListener('keyup', (e) => {
+            if (e.code !== 'Space') return;
+            if (state === 'inspection') {
+                clearInterval(timerInterval);
+                beginSolve();
+            }
+        });
+
+        function beginSolve() {
+            state = 'running';
+            startTime = performance.now();
+            timerEl.className = 'timer-display running';
+            timerInterval = setInterval(() => {
+                timerEl.textContent = formatTime(performance.now() - startTime);
+            }, 10);
+        }
+
+        // Visual ready indicator while holding
+        setInterval(() => {
+            if (state === 'holding') {
+                const held = performance.now() - holdStart;
+                if (held >= 300) {
+                    timerEl.className = 'timer-display ready';
+                    timerEl.textContent = '0.00';
+                }
+            }
+        }, 30);
+
+        // Puzzle size buttons
+        document.querySelectorAll('.puzzle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.puzzle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentSize = parseInt(btn.dataset.size);
+                document.getElementById('session-label').textContent = currentSize + '×' + currentSize;
+                times = [];
+                updateStats();
+                newScramble();
+                timerEl.textContent = '0.00';
+                timerEl.className = 'timer-display';
+                state = 'idle';
+            });
+        });
+
+        // ========== ALGORITHMS DATA ==========
+        const ALGS = {
+            oll: [
+                { name: "OLL 1", alg: "R U2 R2 F R F' U2 R' F R F'", moves: 11 },
+                { name: "OLL 2", alg: "F R U R' U' F' f R U R' U' f'", moves: 12 },
+                { name: "OLL 3", alg: "f R U R' U' f' U F R U R' U' F'", moves: 14 },
+                { name: "OLL 4", alg: "f R U R' U' f' U' F R U R' U' F'", moves: 14 },
+                { name: "OLL 5", alg: "r' U2 R U R' U r", moves: 7 },
+                { name: "OLL 6", alg: "r U2 R' U' R U' r'", moves: 7 },
+                { name: "OLL 7", alg: "r U R' U R U2 r'", moves: 7 },
+                { name: "OLL 8", alg: "r' U' R U' R' U2 r", moves: 7 },
+                { name: "OLL 9", alg: "R U R' U' R' F R2 U R' U' F'", moves: 11 },
+                { name: "OLL 10", alg: "R U R' U R' F R F' R U2 R'", moves: 11 },
+                { name: "OLL 11", alg: "r' R2 U R' U R U2 R' U M'", moves: 10 },
+                { name: "OLL 12", alg: "M' R' U' R U' R' U2 R U' M", moves: 11 },
+                { name: "OLL 13", alg: "F U R U2 R' U' R U R' F'", moves: 10 },
+                { name: "OLL 14", alg: "R' F R U R' F' R F U' F'", moves: 10 },
+                { name: "OLL 15", alg: "r' U' r R' U' R U r' U r", moves: 10 },
+                { name: "OLL 16", alg: "r U r' R U R' U' r U' r'", moves: 10 },
+                { name: "OLL 17", alg: "R U R' U R' F R F' U2 R' F R F'", moves: 14 },
+                { name: "OLL 18", alg: "r U R' U R U2 r2 U' R U' R' U2 r", moves: 14 },
+                { name: "OLL 19", alg: "M U R U R' U' M2 U R U' r'", moves: 11 },
+                { name: "OLL 20", alg: "r U R' U' M2 U R U' R' U' M'", moves: 12 },
+                { name: "OLL 21", alg: "R U2 R' U' R U R' U' R U' R'", moves: 11 },
+                { name: "OLL 22", alg: "R U2 R2 U' R2 U' R2 U2 R", moves: 9 },
+                { name: "OLL 23", alg: "R2 D R' U2 R D' R' U2 R'", moves: 9 },
+                { name: "OLL 24", alg: "r U R' U' r' F R F'", moves: 8 },
+                { name: "OLL 25", alg: "F R' F' r U R U' r'", moves: 8 },
+                { name: "OLL 26", alg: "R U2 R' U' R U' R'", moves: 7 },
+                { name: "OLL 27", alg: "R U R' U R U2 R'", moves: 7 },
+                { name: "OLL 28", alg: "r U R' U' M U R U' R'", moves: 9 },
+                { name: "OLL 29", alg: "R U R' U' R U' R' F' U' F R U R'", moves: 14 },
+                { name: "OLL 30", alg: "F R' F R2 U' R' U' R U R' F2", moves: 12 },
+                { name: "OLL 31", alg: "R' U' F U R U' R' F' R", moves: 9 },
+                { name: "OLL 32", alg: "S R U R' U' R' F R f'", moves: 9 },
+                { name: "OLL 33", alg: "R U R' U' R' F R F'", moves: 8 },
+                { name: "OLL 34", alg: "R U R2 U' R' F R U R U' F'", moves: 12 },
+                { name: "OLL 35", alg: "R U2 R2 F R F' R U2 R'", moves: 10 },
+                { name: "OLL 36", alg: "L' U' L U' L' U L U L F' L' F", moves: 13 },
+                { name: "OLL 37", alg: "F R U' R' U' R U R' F'", moves: 9 },
+                { name: "OLL 38", alg: "R U R' U R U' R' U' R' F R F'", moves: 13 },
+                { name: "OLL 39", alg: "L F' L' U' L U F U' L'", moves: 9 },
+                { name: "OLL 40", alg: "R' F R U R' U' F' U R", moves: 9 },
+                { name: "OLL 41", alg: "R U R' U R U2 R' F R U R' U' F'", moves: 14 },
+                { name: "OLL 42", alg: "R' U' R U' R' U2 R F R U R' U' F'", moves: 14 },
+                { name: "OLL 43", alg: "F' U' L' U L F", moves: 6 },
+                { name: "OLL 44", alg: "F U R U' R' F'", moves: 6 },
+                { name: "OLL 45", alg: "F R U R' U' F'", moves: 6 },
+                { name: "OLL 46", alg: "R' U' R' F R F' U R", moves: 8 },
+                { name: "OLL 47", alg: "F' L' U' L U L' U' L U F", moves: 11 },
+                { name: "OLL 48", alg: "F R U R' U' R U R' U' F'", moves: 11 },
+                { name: "OLL 49", alg: "r U' r2 U r2 U r2 U' r", moves: 9 },
+                { name: "OLL 50", alg: "r' U r2 U' r2 U' r2 U r'", moves: 9 },
+                { name: "OLL 51", alg: "F U R U' R' U R U' R' F'", moves: 11 },
+                { name: "OLL 52", alg: "R U R' U R U' B U' B' R'", moves: 10 },
+                { name: "OLL 53", alg: "r' U' R U' R' U R U' R' U2 r", moves: 12 },
+                { name: "OLL 54", alg: "r U R' U R U' R' U R U2 r'", moves: 12 },
+                { name: "OLL 55", alg: "R U2 R2 U' R U' R' U2 F R F'", moves: 12 },
+                { name: "OLL 56", alg: "r U r' U R U' R' U R U' R' r U' r'", moves: 15 },
+                { name: "OLL 57", alg: "R U R' U' M' U R U' r'", moves: 9 }
+            ],
+            pll: [
+                { name: "Aa Perm", alg: "x R' U R' D2 R U' R' D2 R2 x'", moves: 9 },
+                { name: "Ab Perm", alg: "x R2 D2 R U R' D2 R U' R x'", moves: 9 },
+                { name: "E Perm", alg: "x' R U' R' D R U R' D' R U R' D R U' R' D' x", moves: 15 },
+                { name: "F Perm", alg: "R' U' F' R U R' U' R' F R2 U' R' U' R U R' U R", moves: 15 },
+                { name: "Ga Perm", alg: "R2 U R' U R' U' R U' R2 U' D R' U R D'", moves: 14 },
+                { name: "Gb Perm", alg: "R' U' R U D' R2 U R' U R U' R U' R2 D", moves: 14 },
+                { name: "Gc Perm", alg: "R2 U' R U' R U R' U R2 U D' R U' R' D", moves: 14 },
+                { name: "Gd Perm", alg: "R U R' U' D R2 U' R U' R' U R' U R2 D'", moves: 14 },
+                { name: "H Perm", alg: "M2 U M2 U2 M2 U M2", moves: 7 },
+                { name: "Ja Perm", alg: "R U R' F' R U R' U' R' F R2 U' R'", moves: 12 },
+                { name: "Jb Perm", alg: "R U R' F' R U R' U' R' F R2 U' R' U'", moves: 13 },
+                { name: "Na Perm", alg: "R U R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R'", moves: 19 },
+                { name: "Nb Perm", alg: "R' U R U' R' F' U' F R U R' F R' F' R U' R", moves: 16 },
+                { name: "Ra Perm", alg: "R U R' F' R U2 R' U2 R' F R U R U2 R'", moves: 14 },
+                { name: "Rb Perm", alg: "R' U2 R U2 R' F R U R' U' R' F' R2 U'", moves: 13 },
+                { name: "T Perm", alg: "R U R' U' R' F R2 U' R' U' R U R' F'", moves: 14 },
+                { name: "Ua Perm", alg: "M2 U M U2 M' U M2", moves: 7 },
+                { name: "Ub Perm", alg: "M2 U' M U2 M' U' M2", moves: 7 },
+                { name: "V Perm", alg: "R' U R' U' R D' R' D R' U D' R2 U' R2 D R2", moves: 16 },
+                { name: "Y Perm", alg: "F R U' R' U' R U R' F' R U R' U' R' F R F'", moves: 17 },
+                { name: "Z Perm", alg: "M2 U M2 U M' U2 M2 U2 M'", moves: 9 }
+            ],
+            f2l: [
+                { name: "Basic Insert", alg: "U R U' R'", moves: 4 },
+                { name: "Basic Insert (mir)", alg: "U' L' U L", moves: 4 },
+                { name: "F2L Case 1", alg: "R U R'", moves: 3 },
+                { name: "F2L Case 2", alg: "y' R' U' R", moves: 4 },
+                { name: "F2L Case 3", alg: "U' R U R' U R U R'", moves: 8 },
+                { name: "F2L Case 4", alg: "U' R U2 R' U R U R'", moves: 8 },
+                { name: "F2L Case 5", alg: "U R U2 R' U R U' R'", moves: 8 },
+                { name: "F2L Case 6", alg: "R U' R' U R U' R' U2 R U' R'", moves: 12 },
+                { name: "Connected Pair", alg: "R U R' U' R U R'", moves: 7 },
+                { name: "Split Pair", alg: "U R U' R' U' R U R'", moves: 8 }
+            ]
+        };
+
+        let currentCat = 'oll';
+        let practicePool = [];
+        let practiceIdx = 0;
+        let algVisible = true;
+
+        function loadCategory(cat) {
+            currentCat = cat;
+            document.querySelectorAll('.alg-cat-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.cat === cat);
+            });
+            const titles = { oll: 'OLL Algorithms', pll: 'PLL Algorithms', f2l: 'F2L Basics' };
+            document.getElementById('cat-title').textContent = titles[cat];
+            document.getElementById('cat-count').textContent = ALGS[cat].length + ' cases';
+            document.getElementById('alg-list-view').style.display = 'block';
+            document.getElementById('practice-box').classList.remove('active');
+
+            const grid = document.getElementById('alg-grid');
+            grid.innerHTML = ALGS[cat].map((a, i) => `
+                <div class="alg-card" onclick="selectAlg(${i})">
+                    <span class="alg-badge">${a.moves} HTM</span>
+                    <div class="alg-name">${a.name}</div>
+                    <div class="alg-moves">${a.alg}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectAlg(i) {
+            document.querySelectorAll('.alg-card').forEach((c, idx) => {
+                c.classList.toggle('selected', idx === i);
+            });
+        }
+
+        function startPractice() {
+            practicePool = [...ALGS[currentCat]];
+            // shuffle
+            for (let i = practicePool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [practicePool[i], practicePool[j]] = [practicePool[j], practicePool[i]];
+            }
+            practiceIdx = 0;
+            algVisible = true;
+            document.getElementById('alg-list-view').style.display = 'none';
+            document.getElementById('practice-box').classList.add('active');
+            showPracticeCase();
+        }
+
+        function showPracticeCase() {
+            const c = practicePool[practiceIdx];
+            document.getElementById('practice-name').textContent = c.name;
+            document.getElementById('practice-alg').textContent = c.alg;
+            document.getElementById('practice-alg').style.visibility = algVisible ? 'visible' : 'hidden';
+            document.getElementById('vis-label').textContent = algVisible ? 'Hide Alg' : 'Show Alg';
+        }
+
+        function toggleAlgVisibility() {
+            algVisible = !algVisible;
+            document.getElementById('practice-alg').style.visibility = algVisible ? 'visible' : 'hidden';
+            document.getElementById('vis-label').textContent = algVisible ? 'Hide Alg' : 'Show Alg';
+        }
+
+        function nextPracticeCase() {
+            practiceIdx = (practiceIdx + 1) % practicePool.length;
+            algVisible = true;
+            showPracticeCase();
+        }
+
+        function exitPractice() {
+            document.getElementById('practice-box').classList.remove('active');
+            document.getElementById('alg-list-view').style.display = 'block';
+        }
+
+        // Init
+        newScramble();
+        updateStats();
+        loadCategory('oll');
+    </script>
+</body>
+</html>
